@@ -39,9 +39,17 @@ void Buttons::begin() {
 #if CUSTOM_BUTTON_FUNCTIONS
 	gamebuino_meta_buttons_init();
 #else // CUSTOM_BUTTON_FUNCTIONS
+#ifdef __SAMD51__
+	pinMode(BUTTON_CLOCK, OUTPUT);
+	digitalWrite(BUTTON_CLOCK, HIGH);
+	pinMode(BUTTON_LATCH, OUTPUT);
+	digitalWrite(BUTTON_LATCH, HIGH);
+	pinMode(BUTTON_DATA, INPUT);
+#else
 	SPI.begin();
 	pinMode(BTN_CS, OUTPUT);
 	digitalWrite(BTN_CS, HIGH);
+#endif
 #endif // CUSTOM_BUTTON_FUNCTIONS
 }
 
@@ -52,6 +60,23 @@ void Buttons::update() {
 #if CUSTOM_BUTTON_FUNCTIONS
 	uint8_t buttonsData = gamebuino_meta_buttons_update();
 #else // CUSTOM_BUTTON_FUNCTIONS
+
+#ifdef __SAMD51__
+	// read '165 directly
+	uint8_t buttonsData = 0;
+
+	digitalWrite(BUTTON_LATCH, LOW);
+	digitalWrite(BUTTON_LATCH, HIGH);
+
+	for(int i = 0; i < 8; i++) {
+	  buttonsData <<= 1;
+	  //Serial.print(digitalRead(BUTTON_DATA)); Serial.print(", ");
+	  buttonsData |= digitalRead(BUTTON_DATA);
+	  digitalWrite(BUTTON_CLOCK, HIGH);
+	  digitalWrite(BUTTON_CLOCK, LOW);
+	}
+	buttonsData = ~buttonsData; // invert all the data since we expect 0 is pressed later
+#else
 	//start SPI
 	SPI.beginTransaction(SPISettings(12000000, MSBFIRST, SPI_MODE0));
 	digitalWrite(BTN_CS, LOW);
@@ -62,6 +87,7 @@ void Buttons::update() {
 	//end SPI
 	digitalWrite(BTN_CS, HIGH);
 	SPI.endTransaction();
+#endif
 #endif // CUSTOM_BUTTON_FUNCTIONS
 	//Print raw data to native USB
 	//SerialUSB.println(buttonsData,BIN);

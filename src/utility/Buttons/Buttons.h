@@ -27,10 +27,26 @@ Authors:
 #include "../../config/config.h"
 
 namespace Gamebuino_Meta {
-const uint8_t NUM_BTN = 8;
-const uint8_t BTN_CS = 25;
+#ifdef __SAMD51__
+  const uint8_t  BUTTON_CLOCK  = 48;
+  const uint8_t  BUTTON_DATA   = 49;
+  const uint8_t  BUTTON_LATCH  = 50;
+#else
+  const uint8_t BTN_CS = 25;
+#endif
+  const uint8_t NUM_BTN = 8;
 
 enum class Button : uint8_t {
+#ifdef __SAMD51__
+	left = 0,
+	up,
+	down,
+	right,
+        menu,
+	home,
+	a,
+	b,
+#else
 	down = 0,
 	left,
 	right,
@@ -39,6 +55,7 @@ enum class Button : uint8_t {
 	b,
 	menu,
 	home,
+#endif
 };
 
 class Buttons {
