@@ -29,6 +29,10 @@ Authors:
 
 namespace Gamebuino_Meta {
 
+#ifdef __SAMD51__
+#define SPEAKER_ENABLE 51
+#endif
+
 enum class Sound_Channel_Type : uint8_t {
 	raw,
 	square,

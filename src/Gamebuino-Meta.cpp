@@ -37,7 +37,7 @@ SdFat SD;
 extern const uint8_t font3x5[];
 
 namespace Gamebuino_Meta {
-	
+
 // we have more blocks for, in case we add things in the future, old games are less likely to erase our new blocks
 const uint8_t SETTINGSCONF_NUM_BLOCKS = 32;
 const SaveDefault settingsDefaults [] = {
@@ -183,7 +183,7 @@ void Gamebuino::begin() {
 
 	//tft
 	tft.init();
-	tft.setRotation(Rotation::down);
+	tft.setRotation(DEFAULT_ROTATION);
 
 	
 	display.fill(Color::black);
@@ -191,7 +191,6 @@ void Gamebuino::begin() {
 	// Turn on backlight
 	pinMode(TFT_LITE, OUTPUT);
 	digitalWrite(TFT_LITE, HIGH);
-	tft.setRotation(Rotation::up);
 #endif
 	display.fontSize = SYSTEM_DEFAULT_FONT_SIZE;
 
@@ -470,7 +469,7 @@ uint16_t Gamebuino::getFreeRam() {
 	uint8_t hm_save_fontWidth = display.fontWidth; \
 	uint8_t hm_save_fontHeight = display.fontHeight; \
 	Rotation hm_save_rotation = tft.getRotation(); \
-	tft.setRotation(Rotation::down); \
+        tft.setRotation(DEFAULT_ROTATION);	   \
 	Color* hm_save_palette = tft.getPalette(); \
 	tft.setPalette(defaultColorPalette);
 

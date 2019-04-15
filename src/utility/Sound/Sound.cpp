@@ -507,6 +507,10 @@ void Sound::begin() {
 	tcConfigure(SOUND_FREQ);
 	tcStart();
 #endif
+#ifdef __SAMD51__
+	pinMode(SPEAKER_ENABLE, OUTPUT);
+	digitalWrite(SPEAKER_ENABLE, HIGH);
+#endif
 }
 
 } // Gamebuino_Meta

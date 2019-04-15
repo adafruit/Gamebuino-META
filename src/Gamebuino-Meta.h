@@ -75,15 +75,14 @@ namespace Gamebuino_Meta {
   #define TFT_LITE       47
   #define SD_CS	         4
   #define NEOPIX_PIN     8
-  #define BUTTON_CLOCK   48
-  #define BUTTON_DATA    49
-  #define BUTTON_LATCH   50
+  #define DEFAULT_ROTATION Rotation::up
 #else
   #define TFT_CS		(30u)
   #define TFT_DC		(31u)
   #define SD_CS		(26u)
   #define NEOPIX_PIN	(38u)
   #define BAT_PIN		(A5)
+  #define DEFAULT_ROTATION Rotation::down
 #endif
 
 #define wrap(i, imax) ((imax+i)%(imax))
