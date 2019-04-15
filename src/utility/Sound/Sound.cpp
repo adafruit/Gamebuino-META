@@ -63,7 +63,11 @@ Sound_Handler* handlers[SOUND_CHANNELS];
 FX_Channel fx_channel = { 0 };
 
 bool tcIsSyncing() {
+#ifdef __SAMD51__
+  return false;
+#else
 	return TC5->COUNT16.STATUS.reg & TC_STATUS_SYNCBUSY;
+#endif
 }
 
 void tcStart() {
@@ -88,8 +92,12 @@ void tcDisable() {
 
 void tcConfigure(uint32_t sampleRate) {
 	// Enable GCLK for TCC2 and TC5 (timer counter input clock)
+#if defined(__SAMD51__)
+        GCLK->PCHCTRL[TC5_GCLK_ID].reg = GCLK_PCHCTRL_GEN_GCLK0_Val | (1 << GCLK_PCHCTRL_CHEN_Pos);
+#else
 	GCLK->CLKCTRL.reg = (uint16_t) (GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID(GCM_TC4_TC5)) ;
 	while (GCLK->STATUS.bit.SYNCBUSY);
+#endif
 
 	tcReset();
 
@@ -97,7 +105,11 @@ void tcConfigure(uint32_t sampleRate) {
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_MODE_COUNT16;
 
 	// Set TC5 mode as match frequency
+#ifdef __SAMD51__
+	TC5->COUNT16.WAVE.reg |= TC_WAVE_WAVEGEN_MFRQ;
+#else
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_WAVEGEN_MFRQ;
+#endif
 
 	TC5->COUNT16.CTRLA.reg |= TC_CTRLA_PRESCALER_DIV1 | TC_CTRLA_ENABLE;
 
@@ -477,9 +489,13 @@ void TC5_Handler (void) __attribute__ ((alias("Audio_Handler")));
 #endif
 
 void dacConfigure(void) {
+#if defined(__SAMD51__)
+  flowdown = analogRead(A0); // initial flowdown to prevent popping sound
+#else
 	if (PM->RCAUSE.bit.POR) {
 		flowdown = analogRead(A0); // initial flowdown to prevent popping sound
 	}
+#endif
 	analogWriteResolution(10);
 }
 

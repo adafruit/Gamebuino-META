@@ -68,11 +68,23 @@ extern SdFat SD;
 #endif
 
 namespace Gamebuino_Meta {
-#define TFT_CS		(30u)
-#define TFT_DC		(31u)
-#define SD_CS		(26u)
-#define NEOPIX_PIN	(38u)
-#define BAT_PIN		(A5)
+#ifdef __SAMD51__
+  #define TFT_CS         44
+  #define TFT_DC         45
+  #define TFT_RST        46
+  #define TFT_LITE       47
+  #define SD_CS	         4
+  #define NEOPIX_PIN     8
+  #define BUTTON_CLOCK   48
+  #define BUTTON_DATA    49
+  #define BUTTON_LATCH   50
+#else
+  #define TFT_CS		(30u)
+  #define TFT_DC		(31u)
+  #define SD_CS		(26u)
+  #define NEOPIX_PIN	(38u)
+  #define BAT_PIN		(A5)
+#endif
 
 #define wrap(i, imax) ((imax+i)%(imax))
 

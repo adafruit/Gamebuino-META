@@ -150,7 +150,9 @@ Gamebuino* gbptr = nullptr;
 
 void Gamebuino::begin() {
 	// first we disable the watchdog timer so that we tell the bootloader everything is fine!
+#ifndef __SAMD51__
 	WDT->CTRL.bit.ENABLE = 0;
+#endif
 	gbptr = this;
 	
 	// let's to some sanity checks which are done on compile-time
@@ -178,15 +180,21 @@ void Gamebuino::begin() {
 	buttons.begin();
 	buttons.update();
 	bool muteSound = buttons.repeat(Button::b, 0);
-	
+
 	//tft
 	tft.init();
 	tft.setRotation(Rotation::down);
-	
+
 	
 	display.fill(Color::black);
+#ifdef __SAMD51__
+	// Turn on backlight
+	pinMode(TFT_LITE, OUTPUT);
+	digitalWrite(TFT_LITE, HIGH);
+	tft.setRotation(Rotation::up);
+#endif
 	display.fontSize = SYSTEM_DEFAULT_FONT_SIZE;
-	
+
 	display.setColor(Color::white);
 	drawLogo(display, 2, 2, display.fontSize);
 #if USE_SDFAT
@@ -248,7 +256,10 @@ void Gamebuino::begin() {
 	
 	Graphics_SD::setTft(&tft);
 	// only do titleScreen after a hard power on
-	if (PM->RCAUSE.bit.POR) {
+#if !defined(__SAMD51__)
+	if (PM->RCAUSE.bit.POR) 
+#endif
+{
 #if AUTOSHOW_STARTSCREEN
 		startScreen();
 #endif
