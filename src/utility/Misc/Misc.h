@@ -25,9 +25,17 @@ Authors:
 
 #include "../../config/config.h"
 
-#if USE_SDFAT
-#include "../SdFat.h"
-extern SdFat SD;
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+ // doesn't have an SD card, use QSPI instead!
+ #include <Adafruit_SPIFlash.h>
+ #include <Adafruit_SPIFlash_FatFs.h>
+ #include "Adafruit_QSPI_GD25Q.h"
+ extern Adafruit_M0_Express_CircuitPython SD;
+#else
+  #if USE_SDFAT
+   #include "../SdFat.h"
+   extern SdFat SD;
+  #endif
 #endif
 
 namespace Gamebuino_Meta {

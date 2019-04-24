@@ -23,9 +23,16 @@ Authors:
 #include "Sound-SD.h"
 #include "../Misc.h"
 
-#if USE_SDFAT
-#include "../SdFat.h"
-extern SdFat SD;
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+  // doesn't have an SD card, use QSPI instead!
+  #include "Adafruit_QSPI_GD25Q.h"
+  extern Adafruit_QSPI_GD25Q flash;
+  extern Adafruit_M0_Express_CircuitPython SD;
+#else
+  #if USE_SDFAT
+    #include "../SdFat.h"
+    extern SdFat SD;
+  #endif
 #endif
 
 namespace Gamebuino_Meta {

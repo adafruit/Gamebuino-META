@@ -30,10 +30,17 @@ Authors:
 
 #include "config/config.h"
 
-#if USE_SDFAT
-#include <SPI.h>
-#include "utility/SdFat.h"
-extern SdFat SD;
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+ // doesn't have an SD card, use QSPI instead!
+ #include <Adafruit_SPIFlash.h>
+ #include <Adafruit_SPIFlash_FatFs.h>
+ #include "Adafruit_QSPI_GD25Q.h"
+#else
+ #if USE_SDFAT
+  #include <SPI.h>
+  #include "utility/SdFat.h"
+  extern SdFat SD;
+ #endif
 #endif
 
 #include "utility/Buttons.h"
@@ -76,6 +83,7 @@ namespace Gamebuino_Meta {
   #define SD_CS	         4
   #define NEOPIX_PIN     8
   #define DEFAULT_ROTATION Rotation::up
+  #define FLASH_TYPE     SPIFLASHTYPE_W25Q64 // Flash chip type.
 #else
   #define TFT_CS		(30u)
   #define TFT_DC		(31u)

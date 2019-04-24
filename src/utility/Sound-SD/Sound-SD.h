@@ -25,8 +25,15 @@ Authors:
 
 #include "../../config/config.h"
 #include "../Sound.h"
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+ // doesn't have an SD card, use QSPI instead!
+ #include <Adafruit_SPIFlash.h>
+ #include <Adafruit_SPIFlash_FatFs.h>
+ #include "Adafruit_QSPI_GD25Q.h"
+#else
 #if USE_SDFAT
 #include "../SdFat.h"
+#endif
 #endif
 
 namespace Gamebuino_Meta {

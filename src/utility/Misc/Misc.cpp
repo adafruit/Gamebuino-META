@@ -93,13 +93,13 @@ uint32_t f_read32(File* f) {
 void f_write32(uint32_t b, File* f) {
 	//Write four bytes
 	//Luckily our MCU is little endian so byte order like this is fine
-	f->write(&b, 4);
+	f->write((uint8_t *)&b, 4);
 }
 
 void f_write16(uint16_t b, File* f) {
 	//Write two bytes
 	//Luckily our MCU is little endian so byte order like this is fine
-	f->write(&b, 2);
+	f->write((uint8_t *)&b, 2);
 }
 #endif // USE_SDFAT
 

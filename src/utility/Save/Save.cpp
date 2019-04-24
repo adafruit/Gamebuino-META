@@ -93,29 +93,43 @@ SaveVar Save::getVarInfo(uint16_t i) {
 void Save::openFile() {
 #if USE_SDFAT
 	if (open) {
+	  Serial.println("Already open");
 		return;
 	}
 	bool exists = SD.exists(savefile);
+	  Serial.println("exists");
 	f = SD.open(savefile, FILE_WRITE);
+	  Serial.println("openwrite");
+
 	if (!f) {
 		// eeeeeh, can't open it so we are read-only
+	  Serial.println("readonly");
+
 		open = true;
 		readOnly = true;
 		return;
 	}
+	Serial.println("writeable");
 	open = true;
 	if (!exists) {
+	Serial.println("!exists");
+
 		// the file doesn't exist yet, so let's create it
-		f.write(checkbytes, 4);
-		f.write(&blocks, 2); // write the amount of blocks
-		
+	f.write((uint8_t *)checkbytes, 4);
+		Serial.print("Write1");
+		f.write((uint8_t *)&blocks, 2); // write the amount of blocks
+		Serial.print("Write2");
 		// +4 because of 4-byte payload size
 		for (uint32_t i = 0; i < (5*(uint32_t)blocks) + 4; i++) {
+		Serial.print("Write3");
+
 			f.write((uint8_t)0);
 		}
-		
+				Serial.print("Flush");
+
 		f.flush(); // make sure the file gets created
 	}
+	Serial.println("A");
 	f.rewind(); // rewind it so that we can read its properties
 	// the file already exists, so time to read some properties!
 	
@@ -125,6 +139,8 @@ void Save::openFile() {
 	if (memcmp(&payload_size, checkbytes, 4) != 0) {
 		error("Invalid save file");
 	}
+	Serial.println("B");
+
 	uint16_t blocks_old;
 	f.read(&blocks_old, 2); // how many blocks do we have?
 	f.read(&payload_size, 4); // let's grab the payload size!
@@ -148,7 +164,7 @@ void Save::openFile() {
 			f.seekSet(SAVEHEADER_SIZE + blocks_old + i*4);
 			f.read(&b, 4);
 			f.seekSet(SAVEHEADER_SIZE + blocks_new + i*4);
-			f.write(&b, 4);
+			f.write((uint8_t *)&b, 4);
 		}
 		
 		// now we fix the payload
@@ -157,12 +173,17 @@ void Save::openFile() {
 			f.seek(SAVEHEADER_SIZE + (blocks_old * 5) + i);
 			f.read(&b, 1);
 			f.seek(SAVEHEADER_SIZE + (blocks_new * 5) + i);
-			f.write(&b, 1);
+			f.write((uint8_t *)&b, 1);
 		}
+#ifdef  ADAFRUIT_PYBADGE_M4_EXPRESS
+		Serial.println("Truncate file");
+#else
 		f.truncate(SAVEHEADER_SIZE + (blocks_new * 5) + payload_size);
+#endif
 	} else {
 		// we need to grow the block size
-		
+			Serial.println("E");
+
 		// first we grow the file by the desired amount
 		f.seekSet(SAVEHEADER_SIZE + (blocks_old * 5) + payload_size);
 		for (uint32_t i = 0; i < (uint32_t)(blocks_new - blocks_old)*5; i++) {
@@ -175,7 +196,7 @@ void Save::openFile() {
 			f.seek(SAVEHEADER_SIZE + (blocks_old * 5) + (payload_size - i - 1));
 			f.read(&b, 1);
 			f.seek(SAVEHEADER_SIZE + (blocks_new * 5) + (payload_size - i - 1));
-			f.write(&b, 1);
+			f.write((uint8_t *)&b, 1);
 		}
 		
 		// next we offset the blocks
@@ -185,7 +206,7 @@ void Save::openFile() {
 			f.seekSet(SAVEHEADER_SIZE + blocks_old + (blocks_old - i - 1)*4);
 			f.read(&b, 4);
 			f.seekSet(SAVEHEADER_SIZE + blocks_new + (blocks_old - i - 1)*4);
-			f.write(&b, 4);
+			f.write((uint8_t *)&b, 4);
 		}
 		
 		// finally we nullate the new block metadata
@@ -194,9 +215,11 @@ void Save::openFile() {
 			f.write((uint8_t)0);
 		}
 	}
+	Serial.println("F");
+
 	blocks = blocks_new;
 	f.seekSet(4);
-	f.write(&blocks_new, 2);
+	f.write((uint8_t *)&blocks_new, 2);
 	f.flush();
 #endif // USE_SDFAT
 }
@@ -208,7 +231,9 @@ uint32_t Save::_get(uint16_t i) {
 #if USE_SDFAT
 	uint32_t val;
 	f.seekSet(SAVEHEADER_SIZE + blocks + (4*i));
+	Serial.print("seeked");
 	f.read(&val, 4);
+	Serial.print(val, HEX);
 	return val;
 #else // USE_SDFAT
 	return 0;
@@ -216,8 +241,12 @@ uint32_t Save::_get(uint16_t i) {
 }
 
 int32_t Save::get(uint16_t i) {
+	Serial.println("open");
 	openFile();
+	Serial.println("opened");
 	SaveVar s = getVarInfo(i);
+	Serial.println("gotinfo");
+
 	if (!s.defined) {
 		for (uint16_t j = 0; j < num_defaults; j++) {
 			if (defaults[j].i == i) {
@@ -283,7 +312,7 @@ bool Save::get(uint16_t i, void* buf, uint32_t bufsize) {
 void Save::_set(uint16_t i, uint32_t b) {
 #if USE_SDFAT
 	f.seekSet(SAVEHEADER_SIZE + blocks + (4*i));
-	f.write(&b, 4);
+	f.write((uint8_t *)&b, 4);
 #endif // USE_SDFAT
 }
 
@@ -326,7 +355,7 @@ void Save::newBlob(uint16_t i, uint32_t size) {
 	
 	f.seekSet(SAVEFILE_PAYLOAD_START + payload_size);
 	// write the size
-	f.write(&size, 4);
+	f.write((uint8_t *)&size, 4);
 	// now fill the payload with zeros
 	for(uint32_t j = 0; j < size; j++) {
 		f.write((uint8_t)0);
@@ -335,7 +364,7 @@ void Save::newBlob(uint16_t i, uint32_t size) {
 	// aaand increase the payload size
 	payload_size += size + 4; // +4 because size is stored in payload
 	f.seekSet(6);
-	f.write(&payload_size, 4);
+	f.write((uint8_t *)&payload_size, 4);
 #endif // USE_SDFAT
 }
 
@@ -402,7 +431,7 @@ bool Save::set(uint16_t i, void* buf, uint32_t bufsize) {
 	// we already seeked correctly
 	
 	// now finally perform the write
-	f.write(buf, size);
+	f.write((uint8_t *)buf, size);
 	f.flush();
 	return true;
 #else // USE_SDFAT
@@ -465,8 +494,12 @@ void Save::del(uint16_t i) {
 	// now all that is left to do is to adjust the payload and filesize
 	payload_size -= size;
 	f.seekSet(6);
-	f.write(&payload_size, 4);
+	f.write((uint8_t *)&payload_size, 4);
+#ifdef  ADAFRUIT_PYBADGE_M4_EXPRESS
+	Serial.println("Truncate file");
+#else
 	f.truncate(SAVEFILE_PAYLOAD_START + payload_size);
+#endif
 	f.flush();
 #endif // USE_SDFAT
 }

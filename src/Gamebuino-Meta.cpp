@@ -29,8 +29,17 @@ Authors:
 #define min(x, y) ((x < y) ? x : y)
 #endif
 
-#if USE_SDFAT
-SdFat SD;
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+ // doesn't have an SD card, use QSPI instead!
+ #include <Adafruit_SPIFlash.h>
+ #include <Adafruit_SPIFlash_FatFs.h>
+ #include "Adafruit_QSPI_GD25Q.h"
+ Adafruit_QSPI_GD25Q flash;
+ Adafruit_M0_Express_CircuitPython SD(flash);
+#else
+ #if USE_SDFAT
+  SdFat SD;
+ #endif
 #endif
 
 // a 3x5 font table
@@ -199,12 +208,22 @@ void Gamebuino::begin() {
 #if USE_SDFAT
 	display.setColor(Color::brown, Color::black);
 	display.setCursor(0, display.height() - (display.getFontHeight()*display.fontSize));
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+	display.print("QSPI INIT... ");
+#else
 	display.print("SD INIT... ");
+#endif
 #endif // USE_SDFAT
 	updateDisplay();
 
 #if USE_SDFAT
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+	sdInited = flash.begin();
+	flash.setFlashType(FLASH_TYPE);
+	sdInited = sdInited && SD.begin();
+#else
 	sdInited = SD.begin(SD_CS, SPISettings(12000000, MSBFIRST, SPI_MODE0));
+#endif
 	if (!sdInited) {
 		display.setColor(Color::red, Color::black);
 		display.println("FAILED!");
@@ -227,32 +246,47 @@ void Gamebuino::begin() {
 	if (!SD.exists(folder_name)) {
 		SD.mkdir(folder_name);
 	}
+#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
+	Serial.print("***Chanding dir to "); Serial.println(folder_name);
+#else
 	SD.chdir(folder_name);
 #endif
-	
+#endif
+	Serial.println("Save file");
 	save = Save(SAVEFILE_NAME, folder_name);
 	
+	Serial.println("Savesett");
 	settings = Save("/SETTINGS.SAV", "GBMS");
+	Serial.println("Config");
 	settings.config(SETTINGSCONF_NUM_BLOCKS, settingsDefaults);
+	Serial.println("sound");
 	
 	//sound
 	sound.begin();
+	Serial.println("soundbeing");
 	if (settings.get(SETTING_VOLUME_MUTE)) {
 		sound.mute();
 	}
+	Serial.println("getvolume");
 	sound.setVolume(settings.get(SETTING_VOLUME));
 
+	Serial.println("mutesound");
 	if (muteSound) {
 		settings.set(SETTING_VOLUME_MUTE, (int32_t)1);
 		sound.mute();
 	}
 	
+	Serial.println("lang");
 	// language
 	language.setCurrentLang((LangCode)settings.get(SETTING_LANGUAGE));
 	
+	Serial.println("neopix");
+
 	// neoPixels
 	neoPixels.setBrightness(neoPixelsIntensities[settings.get(SETTING_NEOPIXELS_INTENSITY)]);
 	
+	Serial.println("settft");
+
 	Graphics_SD::setTft(&tft);
 	// only do titleScreen after a hard power on
 #if !defined(__SAMD51__)
@@ -266,6 +300,7 @@ void Gamebuino::begin() {
 		titleScreen();
 #endif
 	}
+	Serial.println("rand");
 	pickRandomSeed();
 	display.clear();
 	
@@ -537,6 +572,7 @@ bool homeMenuGetUniquePath(char* name, uint8_t offset, uint8_t len) {
 	start = f_read32(&cache);
 	start = sdPathNoDuplicate(name, offset, len, start + 1);
 	cache.rewind();
+
 	if (start == -1) {
 		f_write32(0, &cache);
 		start = sdPathNoDuplicate(name, offset, len);
