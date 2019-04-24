@@ -4,8 +4,8 @@
 // file and pass address of GFXfont struct to setFont().  Pass NULL to
 // revert to 'classic' fixed-space bitmap font.
 
-#ifndef _GFXFONT_H_
-#define _GFXFONT_H_
+#ifndef _GRAPHICSFONT_H_
+#define _GRAPHICSFONT_H_
 
 #include "stdint.h"
 
