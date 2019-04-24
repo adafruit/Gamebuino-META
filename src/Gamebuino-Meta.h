@@ -30,11 +30,8 @@ Authors:
 
 #include "config/config.h"
 
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include <Adafruit_SPIFlash.h>
- #include <Adafruit_SPIFlash_FatFs.h>
- #include "Adafruit_QSPI_GD25Q.h"
+#ifdef __SAMD51__
+ #include <Adafruit_Arcada.h>
 #else
  #if USE_SDFAT
   #include <SPI.h>
@@ -51,7 +48,9 @@ Authors:
 #include "utility/MetaMode.h"
 #include "utility/Collide.h"
 
-#include "utility/Adafruit_NeoPixel.h"
+// Changed this to the standard NeoPixel library to avoid upset compiler
+#include "Adafruit_NeoPixel.h"
+
 #include "utility/Display-ST7735.h"
 #include "utility/Graphics.h"
 #include "utility/Image.h"
@@ -75,15 +74,16 @@ Authors:
 #endif
 
 namespace Gamebuino_Meta {
-#ifdef __SAMD51__
-  #define TFT_CS         44
-  #define TFT_DC         45
-  #define TFT_RST        46
-  #define TFT_LITE       47
-  #define SD_CS	         4
-  #define NEOPIX_PIN     8
+#ifdef _ADAFRUIT_ARCADA_
+  #define TFT_CS         ARCADA_TFT_CS
+  #define TFT_DC         ARCADA_TFT_DC
+  #define TFT_RST        ARCADA_TFT_RST
+  #define TFT_LITE       ARCADA_TFT_LITE
+  #ifdef ARCADA_USE_SD_FS
+    #define SD_CS	 4
+  #endif
+  #define NEOPIX_PIN     ARCADA_NEOPIXEL_PIN
   #define DEFAULT_ROTATION Rotation::up
-  #define FLASH_TYPE     SPIFLASHTYPE_W25Q64 // Flash chip type.
 #else
   #define TFT_CS		(30u)
   #define TFT_DC		(31u)

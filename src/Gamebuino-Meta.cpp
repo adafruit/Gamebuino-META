@@ -29,13 +29,8 @@ Authors:
 #define min(x, y) ((x < y) ? x : y)
 #endif
 
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include <Adafruit_SPIFlash.h>
- #include <Adafruit_SPIFlash_FatFs.h>
- #include "Adafruit_QSPI_GD25Q.h"
- Adafruit_QSPI_GD25Q flash;
- Adafruit_M0_Express_CircuitPython SD(flash);
+#if defined(_ADAFRUIT_ARCADA)
+  Adafruit_Arcada arcada;
 #else
  #if USE_SDFAT
   SdFat SD;
