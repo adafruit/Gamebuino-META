@@ -368,7 +368,9 @@ void Display_ST7735::commonInit() {
 // Initialization for ST7735R screens (green or red tabs)
 void Display_ST7735::init() {
 	commonInit();
-#if !defined(__SAMD51__)
+#if defined(__SAMD51__)
+	commandList(RcmdReset);
+#else
 	if (!PM->RCAUSE.bit.SYST) {
 		commandList(RcmdReset);
 	}

@@ -163,7 +163,13 @@ void Gamebuino::begin() {
 	WDT->CTRL.bit.ENABLE = 0;
 #endif
 	gbptr = this;
-	
+#ifdef __SAMD51__
+	// Turn on backlight
+	pinMode(TFT_LITE, OUTPUT);
+	digitalWrite(TFT_LITE, HIGH);
+	pinMode(TFT_RST, OUTPUT);
+	digitalWrite(TFT_RST, HIGH);
+#endif	
 	// let's to some sanity checks which are done on compile-time
 	
 	// check that the folder name length is at least 4 chars
@@ -193,14 +199,8 @@ void Gamebuino::begin() {
 	//tft
 	tft.init();
 	tft.setRotation(DEFAULT_ROTATION);
-
 	
 	display.fill(Color::black);
-#ifdef __SAMD51__
-	// Turn on backlight
-	pinMode(TFT_LITE, OUTPUT);
-	digitalWrite(TFT_LITE, HIGH);
-#endif
 	display.fontSize = SYSTEM_DEFAULT_FONT_SIZE;
 
 	display.setColor(Color::white);
