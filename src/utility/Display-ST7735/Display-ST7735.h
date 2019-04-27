@@ -26,6 +26,10 @@ as well as Adafruit raw 1.8" TFT display
 
 #include "../../config/config.h"
 
+#ifdef __SAMD51__
+  #include <Adafruit_Arcada.h>
+#endif
+
 #include "../Image.h"
 
 namespace Gamebuino_Meta {

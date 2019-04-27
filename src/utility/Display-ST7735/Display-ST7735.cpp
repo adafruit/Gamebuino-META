@@ -48,8 +48,8 @@ void gamebuino_meta_tft_wait_for_transfers_done(void);
 
 namespace Gamebuino_Meta {
 
-#ifdef __SAMD51__
-  #define _SPI SPI1
+#ifdef _ADAFRUIT_ARCADA_
+  #define _SPI ARCADA_TFT_SPI
 #else
   #define _SPI SPI
 #endif
@@ -327,18 +327,22 @@ void Display_ST7735::commandList(const uint8_t *addr) {
 
 // Initialization code common to both 'B' and 'R' type displays
 void Display_ST7735::commonInit() {
+	
+#ifdef _ADAFRUIT_ARCADA_
+  pinMode(ARCADA_TFT_CS, OUTPUT);
+  pinMode(ARCADA_TFT_DC, OUTPUT);
+  cspinmask = digitalPinToBitMask(ARCADA_TFT_CS);
+  rspinmask = digitalPinToBitMask(ARCADA_TFT_DC);
+  csport = portOutputRegister(digitalPinToPort(ARCADA_TFT_CS));
+  rsport = portOutputRegister(digitalPinToPort(ARCADA_TFT_DC));
+#else
 	csport = &(PORT->Group[1].OUT.reg);
 	rsport = &(PORT->Group[1].OUT.reg);
-	
-#ifdef __SAMD51__
-	cspinmask = (1 << 7);
-	rspinmask = (1 << 5);
-#else
 	cspinmask = (1 << 22);
 	rspinmask = (1 << 23);
-#endif
 	PORT->Group[1].DIR.reg |= cspinmask;
 	PORT->Group[1].DIR.reg |= rspinmask;
+#endif
 	
 
 #ifdef ENABLE_IDLE_TOGGLE_PIN
@@ -368,7 +372,7 @@ void Display_ST7735::commonInit() {
 // Initialization for ST7735R screens (green or red tabs)
 void Display_ST7735::init() {
 	commonInit();
-#if defined(__SAMD51__)
+#if defined(_ADAFRUIT_ARCADA_)
 	commandList(RcmdReset);
 #else
 	if (!PM->RCAUSE.bit.SYST) {
