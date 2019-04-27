@@ -27,11 +27,11 @@ Authors:
 #include "../../config/config.h"
 #include "Sound_FX.h"
 
-namespace Gamebuino_Meta {
-
 #ifdef __SAMD51__
-#define SPEAKER_ENABLE 51
+  #include <Adafruit_Arcada.h>
 #endif
+
+namespace Gamebuino_Meta {
 
 enum class Sound_Channel_Type : uint8_t {
 	raw,

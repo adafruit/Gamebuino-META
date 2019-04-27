@@ -27,6 +27,10 @@ Authors:
 #include "Raw.h"
 #include "../Sound-SD.h"
 
+#ifdef _ADAFRUIT_ARCADA_
+extern Adafruit_Arcada arcada;
+#endif
+
 namespace Gamebuino_Meta {
 
 #if SOUND_ENABLE_FX
@@ -470,11 +474,17 @@ void Audio_Handler (void) {
 			output = 0;
 		}
 		analogWrite(A0, output);
+#ifdef __SAMD51__
+		analogWrite(A1, output);  // stereo
+#endif
 	} else {
 		// we need to output 0 when not in use to not have weird sound effects with the neoLeds as the interrupt isn't 100% constant there.
 		// however, jumping down from 512 (zero-positin) to 0 would give a plop
 		// so instead we gradually decrease instead
 		analogWrite(A0, flowdown); // zero-position
+#ifdef __SAMD51__
+		analogWrite(A1, output);  // stereo
+#endif
 		if (flowdown > 0) {
 			flowdown--;
 		}
@@ -507,9 +517,8 @@ void Sound::begin() {
 	tcConfigure(SOUND_FREQ);
 	tcStart();
 #endif
-#ifdef __SAMD51__
-	pinMode(SPEAKER_ENABLE, OUTPUT);
-	digitalWrite(SPEAKER_ENABLE, HIGH);
+#ifdef _ADAFRUIT_ARCADA_
+	arcada.enableSpeaker(true);
 #endif
 }
 
