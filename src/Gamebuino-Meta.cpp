@@ -29,8 +29,9 @@ Authors:
 #define min(x, y) ((x < y) ? x : y)
 #endif
 
-#if defined(_ADAFRUIT_ARCADA)
+#if defined(_ADAFRUIT_ARCADA_)
   Adafruit_Arcada arcada;
+#define SD arcada  // terrible hack but works
 #else
  #if USE_SDFAT
   SdFat SD;
@@ -153,18 +154,24 @@ const uint16_t startSound[] = {0x0005,0x338,0x3FC,0x254,0x1FC,0x25C,0x3FC,0x368,
 Gamebuino* gbptr = nullptr;
 
 void Gamebuino::begin() {
+  Serial.begin(115200);
+  Serial.println("begin");
+
+#ifdef _ADAFRUIT_ARCADA_
+  arcada.begin();
+  pinMode(TFT_RST, OUTPUT);
+  digitalWrite(TFT_RST, LOW);
+  delay(10);
+  digitalWrite(TFT_RST, HIGH);
+  delay(10);
+  // Turn on backlight
+  arcada.setBacklight(255);
+  arcada.enableSpeaker(true);
+#else
 	// first we disable the watchdog timer so that we tell the bootloader everything is fine!
-#ifndef __SAMD51__
 	WDT->CTRL.bit.ENABLE = 0;
 #endif
 	gbptr = this;
-#ifdef __SAMD51__
-	// Turn on backlight
-	pinMode(TFT_LITE, OUTPUT);
-	digitalWrite(TFT_LITE, HIGH);
-	pinMode(TFT_RST, OUTPUT);
-	digitalWrite(TFT_RST, HIGH);
-#endif	
 	// let's to some sanity checks which are done on compile-time
 	
 	// check that the folder name length is at least 4 chars
@@ -203,8 +210,8 @@ void Gamebuino::begin() {
 #if USE_SDFAT
 	display.setColor(Color::brown, Color::black);
 	display.setCursor(0, display.height() - (display.getFontHeight()*display.fontSize));
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
-	display.print("QSPI INIT... ");
+#ifdef _ADAFRUIT_ARCADA_
+	display.print("FILESYS INIT... ");
 #else
 	display.print("SD INIT... ");
 #endif
@@ -212,19 +219,19 @@ void Gamebuino::begin() {
 	updateDisplay();
 
 #if USE_SDFAT
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
-	sdInited = flash.begin();
-	flash.setFlashType(FLASH_TYPE);
-	sdInited = sdInited && SD.begin();
+#ifdef _ADAFRUIT_ARCADA_
+	sdInited = arcada.filesysBegin();
 #else
 	sdInited = SD.begin(SD_CS, SPISettings(12000000, MSBFIRST, SPI_MODE0));
 #endif
 	if (!sdInited) {
+	  Serial.println("Filesystem failure");
 		display.setColor(Color::red, Color::black);
 		display.println("FAILED!");
 		updateDisplay();
 		delay(100);
 	} else {
+	  Serial.println("Filesystem OK!");
 		display.setColor(Color::lightgreen, Color::black);
 		display.println("OK!");
 		updateDisplay();
@@ -241,13 +248,8 @@ void Gamebuino::begin() {
 	if (!SD.exists(folder_name)) {
 		SD.mkdir(folder_name);
 	}
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
-	Serial.print("***Chanding dir to "); Serial.println(folder_name);
-#else
 	SD.chdir(folder_name);
 #endif
-#endif
-	Serial.println("Save file");
 	save = Save(SAVEFILE_NAME, folder_name);
 	
 	Serial.println("Savesett");

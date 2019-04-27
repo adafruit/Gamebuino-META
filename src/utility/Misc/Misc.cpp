@@ -22,6 +22,13 @@ Authors:
 
 #include "Misc.h"
 
+#ifdef __SAMD51__
+  extern Adafruit_Arcada arcada;
+  #define SD arcada
+#elif USE_SDFAT
+  extern SdFat SD;
+#endif
+
 namespace Gamebuino_Meta {
 
 // create a unique path thing

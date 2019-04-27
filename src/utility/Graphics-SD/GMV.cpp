@@ -25,17 +25,15 @@ Authors:
 #define CONERT_MASK 0xFF000000
 #define CONVERT_MAGIC 0xA1000000
 
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include <Adafruit_SPIFlash.h>
- #include <Adafruit_SPIFlash_FatFs.h>
- #include "Adafruit_QSPI_GD25Q.h"
-#else
-#if USE_SDFAT
-#include "../SdFat.h"
-extern SdFat SD;
+#ifdef __SAMD51__
+  #include <Adafruit_Arcada.h>
+  extern Adafruit_Arcada arcada;
+  #define SD arcada
+#elif USE_SDFAT
+  #include "SdFat.h"
+  extern SdFat SD;
 #endif
-#endif
+
 
 namespace Gamebuino_Meta {
 

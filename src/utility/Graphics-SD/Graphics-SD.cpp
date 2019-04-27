@@ -23,17 +23,13 @@ Authors:
 #include "Graphics-SD.h"
 #include "../Misc.h"
 
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include "Adafruit_QSPI_GD25Q.h"
- extern Adafruit_QSPI_GD25Q flash;
- extern Adafruit_M0_Express_CircuitPython SD;
-
-#else
- #if USE_SDFAT
-  #include "../SdFat.h"
+#ifdef __SAMD51__
+  #include <Adafruit_Arcada.h>
+  extern Adafruit_Arcada arcada;
+  #define SD arcada
+#elif USE_SDFAT
+  #include "SdFat.h"
   extern SdFat SD;
- #endif
 #endif
 
 namespace Gamebuino_Meta {

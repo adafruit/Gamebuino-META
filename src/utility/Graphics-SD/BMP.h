@@ -26,11 +26,8 @@ Authors:
 #include "../../config/config.h"
 #include "../Image.h"
 
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include <Adafruit_SPIFlash.h>
- #include <Adafruit_SPIFlash_FatFs.h>
- #include "Adafruit_QSPI_GD25Q.h"
+#ifdef __SAMD51__
+  #include <Adafruit_Arcada.h>
 #else
 #if USE_SDFAT
 #include "../SdFat.h"

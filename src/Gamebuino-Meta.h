@@ -79,9 +79,6 @@ namespace Gamebuino_Meta {
   #define TFT_DC         ARCADA_TFT_DC
   #define TFT_RST        ARCADA_TFT_RST
   #define TFT_LITE       ARCADA_TFT_LITE
-  #ifdef ARCADA_USE_SD_FS
-    #define SD_CS	 4
-  #endif
   #define NEOPIX_PIN     ARCADA_NEOPIXEL_PIN
   #define DEFAULT_ROTATION Rotation::up
 #else

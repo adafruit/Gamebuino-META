@@ -23,6 +23,13 @@ Authors:
 #include "Save.h"
 #include "../../Gamebuino-Meta.h"
 
+#ifdef _ADAFRUIT_ARCADA_
+  extern Adafruit_Arcada arcada;
+  #define SD arcada
+#elif USE_SDFAT
+  extern SdFat SD;
+#endif
+
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
 #endif
@@ -175,7 +182,7 @@ void Save::openFile() {
 			f.seek(SAVEHEADER_SIZE + (blocks_new * 5) + i);
 			f.write((uint8_t *)&b, 1);
 		}
-#ifdef  ADAFRUIT_PYBADGE_M4_EXPRESS
+#ifdef  __SAMD51__
 		Serial.println("Truncate file");
 #else
 		f.truncate(SAVEHEADER_SIZE + (blocks_new * 5) + payload_size);
@@ -495,7 +502,7 @@ void Save::del(uint16_t i) {
 	payload_size -= size;
 	f.seekSet(6);
 	f.write((uint8_t *)&payload_size, 4);
-#ifdef  ADAFRUIT_PYBADGE_M4_EXPRESS
+#ifdef  __SAMD51__
 	Serial.println("Truncate file");
 #else
 	f.truncate(SAVEFILE_PAYLOAD_START + payload_size);

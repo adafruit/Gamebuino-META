@@ -483,7 +483,7 @@ void Audio_Handler (void) {
 		// so instead we gradually decrease instead
 		analogWrite(A0, flowdown); // zero-position
 #ifdef __SAMD51__
-		analogWrite(A1, output);  // stereo
+		analogWrite(A1, flowdown);  // stereo
 #endif
 		if (flowdown > 0) {
 			flowdown--;

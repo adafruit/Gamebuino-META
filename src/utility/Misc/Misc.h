@@ -23,20 +23,13 @@ Authors:
 #ifndef _GAMEBUINO_META_MISC_H_
 #define _GAMEBUINO_META_MISC_H_
 
-#include "../../config/config.h"
-
-#ifdef ADAFRUIT_PYBADGE_M4_EXPRESS
- // doesn't have an SD card, use QSPI instead!
- #include <Adafruit_SPIFlash.h>
- #include <Adafruit_SPIFlash_FatFs.h>
- #include "Adafruit_QSPI_GD25Q.h"
- extern Adafruit_M0_Express_CircuitPython SD;
-#else
-  #if USE_SDFAT
-   #include "../SdFat.h"
-   extern SdFat SD;
-  #endif
+#ifdef __SAMD51__
+  #include <Adafruit_Arcada.h>
+#elif USE_SDFAT
+  #include "SdFat.h"
 #endif
+
+#include "../../config/config.h"
 
 namespace Gamebuino_Meta {
 
