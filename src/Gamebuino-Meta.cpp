@@ -252,38 +252,27 @@ void Gamebuino::begin() {
 #endif
 	save = Save(SAVEFILE_NAME, folder_name);
 	
-	Serial.println("Savesett");
 	settings = Save("/SETTINGS.SAV", "GBMS");
-	Serial.println("Config");
 	settings.config(SETTINGSCONF_NUM_BLOCKS, settingsDefaults);
-	Serial.println("sound");
 	
 	//sound
 	sound.begin();
-	Serial.println("soundbeing");
 	if (settings.get(SETTING_VOLUME_MUTE)) {
 		sound.mute();
 	}
-	Serial.println("getvolume");
 	sound.setVolume(settings.get(SETTING_VOLUME));
 
-	Serial.println("mutesound");
 	if (muteSound) {
 		settings.set(SETTING_VOLUME_MUTE, (int32_t)1);
 		sound.mute();
 	}
 	
-	Serial.println("lang");
 	// language
 	language.setCurrentLang((LangCode)settings.get(SETTING_LANGUAGE));
 	
-	Serial.println("neopix");
-
 	// neoPixels
 	neoPixels.setBrightness(neoPixelsIntensities[settings.get(SETTING_NEOPIXELS_INTENSITY)]);
 	
-	Serial.println("settft");
-
 	Graphics_SD::setTft(&tft);
 	// only do titleScreen after a hard power on
 #if !defined(__SAMD51__)
@@ -297,7 +286,6 @@ void Gamebuino::begin() {
 		titleScreen();
 #endif
 	}
-	Serial.println("rand");
 	pickRandomSeed();
 	display.clear();
 	
