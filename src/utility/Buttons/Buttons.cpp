@@ -32,20 +32,19 @@ uint8_t gamebuino_meta_buttons_update(void);
 #include <SPI.h>
 #endif
 
-namespace Gamebuino_Meta {
 
+#ifdef _ADAFRUIT_ARCADA_
+extern Adafruit_Arcada arcada;
+#endif
+
+
+namespace Gamebuino_Meta {
 
 void Buttons::begin() {
 #if CUSTOM_BUTTON_FUNCTIONS
 	gamebuino_meta_buttons_init();
 #else // CUSTOM_BUTTON_FUNCTIONS
-#ifdef __SAMD51__
-	pinMode(BUTTON_CLOCK, OUTPUT);
-	digitalWrite(BUTTON_CLOCK, HIGH);
-	pinMode(BUTTON_LATCH, OUTPUT);
-	digitalWrite(BUTTON_LATCH, HIGH);
-	pinMode(BUTTON_DATA, INPUT);
-#else
+#ifndef _ADAFRUIT_ARCADA_
 	SPI.begin();
 	pinMode(BTN_CS, OUTPUT);
 	digitalWrite(BTN_CS, HIGH);
@@ -61,20 +60,18 @@ void Buttons::update() {
 	uint8_t buttonsData = gamebuino_meta_buttons_update();
 #else // CUSTOM_BUTTON_FUNCTIONS
 
-#ifdef __SAMD51__
-	// read '165 directly
+#ifdef _ADAFRUIT_ARCADA_
+	uint8_t arcadaButtons = arcada.readButtons();
 	uint8_t buttonsData = 0;
+	if (arcadaButtons & ARCADA_BUTTONMASK_A)  buttonsData |= 1 << (uint8_t)BUTTON_A;
+	if (arcadaButtons & ARCADA_BUTTONMASK_B)  buttonsData |= 1 << (uint8_t)BUTTON_B;
+	if (arcadaButtons & ARCADA_BUTTONMASK_SELECT)  buttonsData |= 1 << (uint8_t)BUTTON_HOME;
+	if (arcadaButtons & ARCADA_BUTTONMASK_START)  buttonsData |= 1 << (uint8_t)BUTTON_MENU;
+	if (arcadaButtons & ARCADA_BUTTONMASK_UP)  buttonsData |= 1 << (uint8_t)BUTTON_UP;
+	if (arcadaButtons & ARCADA_BUTTONMASK_DOWN)  buttonsData |=  1 << (uint8_t)BUTTON_DOWN;
+	if (arcadaButtons & ARCADA_BUTTONMASK_LEFT)  buttonsData |=  1 << (uint8_t)BUTTON_LEFT;
+	if (arcadaButtons & ARCADA_BUTTONMASK_RIGHT)  buttonsData |=  1 << (uint8_t)BUTTON_RIGHT;
 
-	digitalWrite(BUTTON_LATCH, LOW);
-	digitalWrite(BUTTON_LATCH, HIGH);
-
-	for(int i = 0; i < 8; i++) {
-	  buttonsData <<= 1;
-	  //Serial.print(digitalRead(BUTTON_DATA)); Serial.print(", ");
-	  buttonsData |= digitalRead(BUTTON_DATA);
-	  digitalWrite(BUTTON_CLOCK, HIGH);
-	  digitalWrite(BUTTON_CLOCK, LOW);
-	}
 	buttonsData = ~buttonsData; // invert all the data since we expect 0 is pressed later
 #else
 	//start SPI
@@ -90,7 +87,7 @@ void Buttons::update() {
 #endif
 #endif // CUSTOM_BUTTON_FUNCTIONS
 	//Print raw data to native USB
-	//SerialUSB.println(buttonsData,BIN);
+	//Serial.println(buttonsData,BIN);
   
 	for (uint8_t thisButton = 0; thisButton < NUM_BTN; thisButton++) {
 		//extract the corresponding bit corresponding to the current button
