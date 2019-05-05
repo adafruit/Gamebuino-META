@@ -1,2 +1,2 @@
-Welcome to the Gamebuino Meta official repository !
+This is a 'port' of the Gamebuino Meta library for Arcada boards such as PyBadge and PyGamer.
 Get started [HERE](https://gamebuino.com/start)!
