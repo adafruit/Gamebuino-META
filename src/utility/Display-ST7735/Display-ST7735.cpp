@@ -41,12 +41,49 @@ void gamebuino_meat_tft_wait_for_desc_available(const uint32_t);
 void gamebuino_meta_tft_wait_for_transfers_done(void);
 }
 #else
-#include "../Adafruit_ZeroDMA.h"
 #endif // CUSTOM_TFT_SPI_FUNCTIONS
 #include "../Image.h"
 
 
 namespace Gamebuino_Meta {
+// Adapted from ASF3 interrupt_sam_nvic.c:
+
+static volatile unsigned long cpu_irq_critical_section_counter = 0;
+static volatile unsigned char cpu_irq_prev_interrupt_state     = 0;
+
+
+static void cpu_irq_enter_critical(void) {
+	if(!cpu_irq_critical_section_counter) {
+		if(__get_PRIMASK() == 0) { // IRQ enabled?
+			__disable_irq();   // Disable it
+			__DMB();
+			cpu_irq_prev_interrupt_state = 1;
+		} else {
+			// Make sure the to save the prev state as false
+			cpu_irq_prev_interrupt_state = 0;
+		}
+
+	}
+
+	cpu_irq_critical_section_counter++;
+}
+
+static void cpu_irq_leave_critical(void) {
+	// Check if the user is trying to leave a critical section
+	// when not in a critical section
+	if(cpu_irq_critical_section_counter > 0) {
+		cpu_irq_critical_section_counter--;
+
+		// Only enable global interrupts when the counter
+		// reaches 0 and the state of the global interrupt flag
+		// was enabled when entering critical state */
+		if((!cpu_irq_critical_section_counter) &&
+		     cpu_irq_prev_interrupt_state) {
+			__DMB();
+			__enable_irq();
+		}
+	}
+}
 
 #ifdef _ADAFRUIT_ARCADA_
   #define _SPI ARCADA_TFT_SPI
@@ -111,7 +148,7 @@ void dma_tft_suspend_callback(Adafruit_ZeroDMA *dma) {
 #endif // ENABLE_IRQ_TOGGLE_PIN1
 	if (dma_desc_free_count < DMA_DESC_COUNT) {
 #ifdef __SAMD51__
-	  DMAC->Channel[tftDMA.channel].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
+	  DMAC->Channel[tftDMA.getChannel()].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 #else
 	  DMAC->CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 #endif
@@ -129,7 +166,7 @@ void dma_tft_done_callback(Adafruit_ZeroDMA *dma) {
 	// resume unconditionally if there are pending buffers
 	if (dma_desc_free_count < DMA_DESC_COUNT-1) {
 #ifdef __SAMD51__
-	  DMAC->Channel[tftDMA.channel].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
+	  DMAC->Channel[tftDMA.getChannel()].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 #else
 	  DMAC->CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 #endif
@@ -501,10 +538,10 @@ void Display_ST7735::sendBuffer(uint16_t *buffer, uint16_t n) {
 	dma_desc_free_count--;
 
 #ifdef __SAMD51__
-	DMAC->Channel[tftDMA.channel].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
-	start = !(DMAC->Channel[tftDMA.channel].CHCTRLA.bit.ENABLE);
+	DMAC->Channel[tftDMA.getChannel()].CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
+	start = !(DMAC->Channel[tftDMA.getChannel()].CHCTRLA.bit.ENABLE);
 #else
-	DMAC->CHID.bit.ID    = tftDMA.channel;
+	DMAC->CHID.bit.ID    = tftDMA.getChannel();
 	DMAC->CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 	start = !(DMAC->CHCTRLA.bit.ENABLE);
 #endif
