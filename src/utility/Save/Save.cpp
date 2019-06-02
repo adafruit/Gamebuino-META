@@ -100,43 +100,31 @@ SaveVar Save::getVarInfo(uint16_t i) {
 void Save::openFile() {
 #if USE_SDFAT
 	if (open) {
-	  Serial.println("Already open");
 		return;
 	}
 	bool exists = SD.exists(savefile);
-	  Serial.println("exists");
 	f = SD.open(savefile, FILE_WRITE);
-	  Serial.println("openwrite");
 
 	if (!f) {
 		// eeeeeh, can't open it so we are read-only
-	  Serial.println("readonly");
-
 		open = true;
 		readOnly = true;
 		return;
 	}
-	Serial.println("writeable");
+
 	open = true;
 	if (!exists) {
-	Serial.println("!exists");
-
 		// the file doesn't exist yet, so let's create it
-	f.write((uint8_t *)checkbytes, 4);
-		Serial.print("Write1");
+            	f.write((uint8_t *)checkbytes, 4);
 		f.write((uint8_t *)&blocks, 2); // write the amount of blocks
-		Serial.print("Write2");
 		// +4 because of 4-byte payload size
 		for (uint32_t i = 0; i < (5*(uint32_t)blocks) + 4; i++) {
-		Serial.print("Write3");
 
 			f.write((uint8_t)0);
 		}
-				Serial.print("Flush");
 
 		f.flush(); // make sure the file gets created
 	}
-	Serial.println("A");
 	f.rewind(); // rewind it so that we can read its properties
 	// the file already exists, so time to read some properties!
 	
@@ -146,7 +134,6 @@ void Save::openFile() {
 	if (memcmp(&payload_size, checkbytes, 4) != 0) {
 		error("Invalid save file");
 	}
-	Serial.println("B");
 
 	uint16_t blocks_old;
 	f.read(&blocks_old, 2); // how many blocks do we have?
@@ -189,7 +176,6 @@ void Save::openFile() {
 #endif
 	} else {
 		// we need to grow the block size
-			Serial.println("E");
 
 		// first we grow the file by the desired amount
 		f.seekSet(SAVEHEADER_SIZE + (blocks_old * 5) + payload_size);
@@ -222,7 +208,6 @@ void Save::openFile() {
 			f.write((uint8_t)0);
 		}
 	}
-	Serial.println("F");
 
 	blocks = blocks_new;
 	f.seekSet(4);
@@ -238,9 +223,7 @@ uint32_t Save::_get(uint16_t i) {
 #if USE_SDFAT
 	uint32_t val;
 	f.seekSet(SAVEHEADER_SIZE + blocks + (4*i));
-	Serial.print("seeked");
 	f.read(&val, 4);
-	Serial.print(val, HEX);
 	return val;
 #else // USE_SDFAT
 	return 0;
@@ -248,11 +231,8 @@ uint32_t Save::_get(uint16_t i) {
 }
 
 int32_t Save::get(uint16_t i) {
-	Serial.println("open");
 	openFile();
-	Serial.println("opened");
 	SaveVar s = getVarInfo(i);
-	Serial.println("gotinfo");
 
 	if (!s.defined) {
 		for (uint16_t j = 0; j < num_defaults; j++) {

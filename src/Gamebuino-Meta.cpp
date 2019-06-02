@@ -31,6 +31,9 @@ Authors:
 
 #if defined(_ADAFRUIT_ARCADA_)
   Adafruit_Arcada arcada;
+  #if !defined(USE_TINYUSB)
+  #error("Please select TinyUSB for the USB stack!")
+  #endif
 #define SD arcada  // terrible hack but works
 #else
  #if USE_SDFAT
@@ -155,10 +158,14 @@ Gamebuino* gbptr = nullptr;
 
 void Gamebuino::begin() {
   Serial.begin(115200);
-  Serial.println("begin");
 
 #ifdef _ADAFRUIT_ARCADA_
   arcada.begin();
+  delay(100);
+  arcada.filesysBeginMSD();
+  delay(100);
+
+  // we have to do this manually
   pinMode(TFT_RST, OUTPUT);
   digitalWrite(TFT_RST, LOW);
   delay(10);
@@ -167,6 +174,7 @@ void Gamebuino::begin() {
   // Turn on backlight
   arcada.setBacklight(255);
   arcada.enableSpeaker(true);
+  //while (!Serial) delay(10);
 #else
 	// first we disable the watchdog timer so that we tell the bootloader everything is fine!
 	WDT->CTRL.bit.ENABLE = 0;
@@ -243,7 +251,7 @@ void Gamebuino::begin() {
 	display.setColor(Color::white, Color::black);
 	display.fill(Color::black);
 	
-	// SD is initialized, let's switch to the folder!
+
 #if USE_SDFAT
 	if (!SD.exists(folder_name)) {
 		SD.mkdir(folder_name);
@@ -261,7 +269,7 @@ void Gamebuino::begin() {
 		sound.mute();
 	}
 	sound.setVolume(settings.get(SETTING_VOLUME));
-
+	
 	if (muteSound) {
 		settings.set(SETTING_VOLUME_MUTE, (int32_t)1);
 		sound.mute();
@@ -382,6 +390,7 @@ void Gamebuino::titleScreen() {
 bool recording_screen = false;
 
 bool Gamebuino::update() {
+        yield();   // run any USB tasks!
 	if (((nextFrameMillis - millis()) > timePerFrame) && frameEndFlag) { //if time to render a new frame is reached and the frame end has ran once
 		nextFrameMillis = millis() + timePerFrame;
 		frameCount++;
@@ -984,7 +993,7 @@ void noTone(uint32_t outputPin) {
 }
 
 extern "C" {
-void yield() {
+void gb_yield() {
 	if (Gamebuino_Meta::gbptr && Gamebuino_Meta::gbptr->inited && (Gamebuino_Meta::gbptr->frameEndFlag || Gamebuino_Meta::gbptr->frameStartMicros)) {
 		Gamebuino_Meta::gbptr->update();
 	}
