@@ -160,8 +160,12 @@ void Gamebuino::begin() {
   Serial.begin(115200);
 
 #ifdef _ADAFRUIT_ARCADA_
-  arcada.begin();
+  if (!arcada.arcadaBegin()) {
+    Serial.println("Couldn't start Arcada");
+    while(1) yield();
+  }
   delay(100);
+  // If we are using TinyUSB we will have the filesystem show up!
   arcada.filesysBeginMSD();
   delay(100);
 

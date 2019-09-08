@@ -34,10 +34,12 @@ as well as Adafruit raw 1.8" TFT display
 
 namespace Gamebuino_Meta {
 
+#ifndef INITR_GREENTAB  // avoid arcada dup include complaints
 // some flags for initR() :(
 #define INITR_GREENTAB 0x0
 #define INITR_REDTAB   0x1
 #define INITR_BLACKTAB   0x2
+#endif
 
 #define INITR_18GREENTAB    INITR_GREENTAB
 #define INITR_18REDTAB      INITR_REDTAB
@@ -97,6 +99,7 @@ namespace Gamebuino_Meta {
 #define ST7735_GMCTRN1 0xE1
 
 // Color definitions
+#ifndef ST7735_BLACK
 #define	ST7735_BLACK   0x0000
 #define	ST7735_BLUE    0x001F
 #define	ST7735_RED     0xF800
@@ -105,6 +108,7 @@ namespace Gamebuino_Meta {
 #define ST7735_MAGENTA 0xF81F
 #define ST7735_YELLOW  0xFFE0
 #define ST7735_WHITE   0xFFFF
+#endif
 
 enum class Rotation : uint8_t {
 	left,
